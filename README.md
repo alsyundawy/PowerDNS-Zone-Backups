@@ -5,34 +5,8 @@ However this is only good for doing a full restore of all zones to the point in 
 
 Following is a simple bash script that uses the pdnsutil command line tool to dump each zone in the database to an individual zone file, and to keep a copy of the each zone file for each of the previous 28 days.
 
-sudo nano -w export-zones-pds.sh
 
-#!/bin/bash
-
-# creates dump/export/backup of all DNS zones
-
-if [ ! -d /var/lib/powerdns/zones ]; then
-  if [ ! -d /var/lib/powerdns ]; then
-    mkdir /var/lib/powerdns
-  fi
-  mkdir /var/lib/powerdns/zones
-fi
-
-zones=(`/usr/bin/pdnsutil list-all-zones`)
-today=`date +%Y%m%d`
-
-for z in "${!zones[@]}"
-do
-
-  /usr/bin/pdnsutil list-zone ${zones[$z]} > "/var/lib/powerdns/zones/${zones[$z]}-$today.zone"
-
-done
-
-find /var/lib/powerdns/zones/ -type f -name '*.zone' -mtime +28 -exec rm {} \;
-
-
-
-Save the script as /usr/local/bin/pdns-dump-zones.sh and then add a cron job that runs once per day. For example, to dump the zones at 3:01 am every day add this cron job:
+Save the script as /usr/local/bin/export-zones-pds.sh and then add a cron job that runs once per day. For example, to dump the zones at 3:01 am every day add this cron job:
 1 3 * * * /usr/local/bin/export-zones-pds.sh
 
 To restore a zone use the pdnsutil command like this:
