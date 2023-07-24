@@ -5,6 +5,7 @@ However this is only good for doing a full restore of all zones to the point in 
 
 Following is a simple bash script that uses the pdnsutil command line tool to dump each zone in the database to an individual zone file, and to keep a copy of the each zone file for each of the previous 28 days.
 
+wget -c https://raw.githubusercontent.com/alsyundawy/PowerDNS-Zone-backups/main/export-zones-pds.sh
 
 Save the script as /usr/local/bin/export-zones-pds.sh and then add a cron job that runs once per day. For example, to dump the zones at 3:01 am every day add this cron job:
 1 3 * * * /usr/local/bin/export-zones-pds.sh
@@ -13,3 +14,8 @@ To restore a zone use the pdnsutil command like this:
 /usr/bin/pdnsutil load-zone example.com /var/lib/powerdns/zones/example.com-20230725.zone
 
 You can easily adjust the retention (currently 28 days) by adjusting the -mtime option in the find command at the end of the script. With a little more work you could adjust the today var to include hours and possibly minutes if you wanted save the zones multiple times a day.
+
+**Anda bebas untuk mengubah, mendistribusikan script ini untuk keperluan anda**
+
+
+### Anda Memang Luar Biasa | Harry DS Alsyundawy | Kaum Rebahan Garis Keras & Militan
