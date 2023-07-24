@@ -1,4 +1,5 @@
-# PowerDNS-Zone-backups
+# PowerDNS Zone Backups Bash Script
+
 PowerDNS uses a database backend by default (e.g. MySQL). Simply do a database dump of the configured database and you’ll have a snapshot of all zones for easy recovery. It is recommend to dump the database to backup on a regular basis so that you can recover in case of a server crash. How often you should take the backup depends in part on how actively the zones are being updated, once a day is a good rule of thumb.
 
 However this is only good for doing a full restore of all zones to the point in time the backup was made. Restoring a single zone from a full database dump would be non-trivial. PowerDNS includes the pdnsutil command line tool that can be used to dump individual zone files. You can then restore individual zones to the state at the time of the specific export. This is useful if an single zone is accidentally deleted or incorrectly updated and you need to recover that specific zone only.
