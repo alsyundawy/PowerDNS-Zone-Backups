@@ -2,11 +2,11 @@
 
 # creates dump/export/backup of all DNS zones
 
-if [ ! -d /var/lib/powerdns/zones ]; then
-  if [ ! -d /var/lib/powerdns ]; then
-    mkdir /var/lib/powerdns
+if [ ! -d /home/powerdns/zones ]; then
+  if [ ! -d /home/powerdns ]; then
+    mkdir /home/powerdns
   fi
-  mkdir /var/lib/powerdns/zones
+  mkdir /home/powerdns/zones
 fi
 
 zones=(`/usr/bin/pdnsutil list-all-zones`)
@@ -15,8 +15,8 @@ today=`date +%Y%m%d`
 for z in "${!zones[@]}"
 do
 
-  /usr/bin/pdnsutil list-zone ${zones[$z]} > "/var/lib/powerdns/zones/${zones[$z]}-$today.zone"
+  /usr/bin/pdnsutil list-zone ${zones[$z]} > "/home/powerdns/zones/${zones[$z]}-$today.zone"
 
 done
 
-find /var/lib/powerdns/zones/ -type f -name '*.zone' -mtime +28 -exec rm {} \;
+find /home/powerdns/zones/ -type f -name '*.zone' -mtime +28 -exec rm {} \;
