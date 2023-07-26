@@ -1,20 +1,18 @@
 # PowerDNS Zone Backups Bash Script
 
-PowerDNS uses a database backend by default (e.g. MySQL). Simply do a database dump of the configured database and you’ll have a snapshot of all zones for easy recovery. It is recommend to dump the database to backup on a regular basis so that you can recover in case of a server crash. How often you should take the backup depends in part on how actively the zones are being updated, once a day is a good rule of thumb.
+PowerDNS menggunakan backend database secara default (mis. MySQL). Cukup lakukan dump database dari database yang dikonfigurasi dan Anda akan memiliki snapshot dari semua zona untuk pemulihan yang mudah. Disarankan untuk membuang database ke cadangan secara teratur sehingga Anda dapat memulihkan jika terjadi kerusakan server. Seberapa sering Anda harus mengambil cadangan sebagian bergantung pada seberapa aktif zona diperbarui, sekali sehari adalah aturan praktis yang baik.
 
-However this is only good for doing a full restore of all zones to the point in time the backup was made. Restoring a single zone from a full database dump would be non-trivial. PowerDNS includes the pdnsutil command line tool that can be used to dump individual zone files. You can then restore individual zones to the state at the time of the specific export. This is useful if an single zone is accidentally deleted or incorrectly updated and you need to recover that specific zone only.
+Namun ini hanya baik untuk melakukan pengembalian penuh semua zona ke titik waktu pencadangan dibuat. Mengembalikan satu zona dari dump database penuh akan menjadi hal yang tidak sepele. PowerDNS menyertakan alat baris perintah pdnsutil yang dapat digunakan untuk membuang file zona individu. Anda kemudian dapat memulihkan masing-masing zona ke keadaan pada saat ekspor tertentu. Ini berguna jika satu zona secara tidak sengaja terhapus atau salah diperbarui dan Anda perlu memulihkan zona tertentu saja.
 
-Following is a simple bash script that uses the pdnsutil command line tool to dump each zone in the database to an individual zone file, and to keep a copy of the each zone file for each of the previous 28 days.
+Berikut ini adalah skrip bash sederhana yang menggunakan alat baris perintah pdnsutil untuk membuang setiap zona dalam database ke file zona individual, dan untuk menyimpan salinan setiap file zona selama 28 hari sebelumnya.
 
 wget -c https://raw.githubusercontent.com/alsyundawy/PowerDNS-Zone-Backups/main/export-zones-pds.sh
 
-Save the script as /usr/local/bin/export-zones-pds.sh and then add a cron job that runs once per day. For example, to dump the zones at 3:01 am every day add this cron job:
-1 3 * * * /usr/local/bin/export-zones-pds.sh
+Simpan skrip sebagai /usr/local/bin/export-zones-pds.sh dan kemudian tambahkan tugas cron yang berjalan sekali sehari. Misalnya, untuk membuang zona pada pukul 3:01 setiap hari, tambahkan tugas cron ini: 1 3 * * * /usr/local/bin/export-zones-pds.sh
 
-To restore a zone use the pdnsutil command like this:
-/usr/bin/pdnsutil load-zone example.com /var/lib/powerdns/zones/example.com-20230725.zone
+Untuk memulihkan zona, gunakan perintah pdnsutil seperti ini: /usr/bin/pdnsutil load-zone example.com /home/powerdns/zones/example.com-20230725.zone
 
-You can easily adjust the retention (currently 28 days) by adjusting the -mtime option in the find command at the end of the script. With a little more work you could adjust the today var to include hours and possibly minutes if you wanted save the zones multiple times a day.
+Anda dapat dengan mudah menyesuaikan retensi (saat ini 28 hari) dengan menyesuaikan opsi -mtime pada perintah find di akhir skrip. Dengan sedikit lebih banyak pekerjaan, Anda dapat menyesuaikan var hari ini untuk memasukkan jam dan mungkin menit jika Anda ingin menyimpan zona beberapa kali sehari.
 
 **Anda bebas untuk mengubah, mendistribusikan script ini untuk keperluan anda**
 
