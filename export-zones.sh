@@ -2,7 +2,10 @@
 
 #================================================
 # export-zones.sh
-# Optimized script untuk mengekspor zona PowerDNS
+# Optimized script untuk mengekspor zona PowerDNS dengan
+# dukungan handling both reverse-zone (IPv4 & IPv6) and forward zones,
+# menampilkan PTR relatif tanpa duplikasi $ORIGIN . dan A/AAAA relatif
+# tanpa domain suffix dan TTL.
 #================================================
 
 set -euo pipefail
@@ -13,7 +16,7 @@ IFS=$'\n\t'
 # -----------------------------------------------
 EXPORT_DIR="/root/zones-backup"
 PDNSUTIL="/usr/bin/pdnsutil"
-RETENTION_DAYS=28
+RETENTION_DAYS=14
 DATE_SUFFIX="$(date +%Y%m%d)"
 
 # -----------------------------------------------
@@ -39,8 +42,6 @@ if ! zones_raw="$(${PDNSUTIL} list-all-zones)"; then
     log "ERROR: Gagal menjalankan pdnsutil."
     exit 1
 fi
-
-# Periksa apakah daftar zona kosong
 mapfile -t zones <<< "${zones_raw}"
 if [[ ${#zones[@]} -eq 0 ]]; then
     log "Tidak ada zona yang ditemukan."
@@ -49,7 +50,7 @@ fi
 log "Ditemukan ${#zones[@]} zona."
 
 # -----------------------------------------------
-# Ekspor zona satu per satu (paralel jika tersedia)
+# Fungsi: Ekspor satu zona
 # -----------------------------------------------
 export_zone() {
     local z="$1"
@@ -57,6 +58,21 @@ export_zone() {
 
     if ${PDNSUTIL} list-zone "${z}" > "${outfile}"; then
         log "Zona '${z}' diekspor -> ${outfile}"
+
+        if [[ "${z}" =~ \.in-addr\.arpa$ ]] || [[ "${z}" =~ \.ip6\.arpa$ ]]; then
+            # Reverse zones
+            log "Memproses reverse-zone ${z}"
+            sed -i '/^\$ORIGIN \.$/d' "${outfile}"
+            sed -i '1i\$ORIGIN .\n' "${outfile}"
+            sed -i -E "s#^${z}[[:space:]]+[0-9]+[[:space:]]+IN[[:space:]]+NS[[:space:]]+(.+)#@\tIN\tNS\t\1#" "${outfile}"
+            sed -i -E "s#^${z}[[:space:]]+[0-9]+[[:space:]]+IN[[:space:]]+SOA[[:space:]]+(.+)#@\tIN\tSOA\t\1#" "${outfile}"
+            sed -i -E "s#^([0-9A-Fa-f\.]+)\.${z}[[:space:]]+[0-9]+[[:space:]]+IN[[:space:]]+PTR[[:space:]]+(.+)#\1\tIN\tPTR\t\2#" "${outfile}"
+        else
+            # Forward zones
+            log "Memproses forward-zone ${z}"
+            # Strip domain suffix and TTL for A, AAAA, CNAME, etc.
+            sed -i -E "s#^([^\.]+)\.${z}[[:space:]]+[0-9]+[[:space:]]+IN[[:space:]]+([A-Z]+)[[:space:]]+(.+)#\1\tIN\t\2\t\3#" "${outfile}"
+        fi
     else
         log "ERROR: Gagal mengekspor zona '${z}'"
         return 1
@@ -65,7 +81,9 @@ export_zone() {
 export -f export_zone
 export EXPORT_DIR PDNSUTIL DATE_SUFFIX
 
-# Cek apakah GNU parallel terpasang
+# -----------------------------------------------
+# Eksekusi ekspor (paralel jika tersedia)
+# -----------------------------------------------
 if command -v parallel &>/dev/null; then
     log "Menjalankan ekspor zona secara paralel..."
     printf "%s\n" "${zones[@]}" | parallel -j0 export_zone {}
